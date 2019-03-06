@@ -50,7 +50,7 @@ unsigned int GridCalibrationTargetObservation::getCornersTargetFrame(
     // add only if the gridpoint which were observed in the image
     if (_success[i]) {
       //convert to cv:Point2f and store
-      cv::Point3f corner(_target->point(i)[0], _target->point(i)[1], 0.0);
+      cv::Point3f corner(_target->point(i)[0], _target->point(i)[1], _target->point(i)[2]);// replace 0.0 with _target->point(i)[2] because holo apriltag's z != 0 lsj
       outCornerList.push_back(corner);
 
       //count the observed corners

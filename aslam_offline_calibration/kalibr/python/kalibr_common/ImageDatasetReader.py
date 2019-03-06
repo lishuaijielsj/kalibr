@@ -81,6 +81,9 @@ class BagImageDatasetReader(object):
 
     bagstart = min(timestamps)
     baglength = max(timestamps) - bagstart
+    print "from"
+    print bag_from_to[0]
+    print bag_from_to[1]
 
     # some value checking
     if bag_from_to[0] >= bag_from_to[1]:

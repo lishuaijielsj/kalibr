@@ -11,7 +11,7 @@ import aslam_cv_backend as acvb
 import kalibr_common as kc
 import kalibr_camera_calibration as kcc
 
-import cv2
+import cv2 as cv
 import os
 import numpy as np
 import pylab as pl
@@ -135,6 +135,7 @@ def parseArgs():
 
 
 def main():
+
     parsed = parseArgs()
     
     #logging modes
@@ -416,6 +417,18 @@ def main():
             if numCams>1: 
                 G=graph
             kcc.generateReport(calibrator, reportFile, showOnScreen=not parsed.dontShowReport, graph=G, removedOutlierCorners=removedOutlierCorners);
+
+            #lsj
+            for cam_Id, cam in enumerate(calibrator.cameras):
+                print "camera {0}".format(cam_Id)
+                pinholeUndistorter = acv.EquidistantPinholeUndistorterNoMask(cam.geometry, 1, 0, 1)
+                topic = parsed.topics[cam_Id]
+                dataset = initBagDataset(parsed.bagfile, topic, parsed.bag_from_to)
+                for timestamp, image in dataset.readDataset():
+                    outImage = pinholeUndistorter.undistortImage(np.array(image))
+                    cv.imshow("src", image)
+                    cv.imshow("undistorted",outImage)
+                    cv.waitKey()
             
         except kcc.OptimizationDiverged:
             restartAttempts-=1

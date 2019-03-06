@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+print "importing libraries"
+import sm
+import kalibr_common as kc
+from kalibr_imu_camera_calibration import *
+import aslam_cv as acv
+import aslam_cameras_april as acv_april
+
+import numpy as np
+import cv2 as cv
+import argparse
+import signal
+import sys
+
+# make numpy print prettier
+np.set_printoptions(suppress=True)
+
+def signal_exit(signal, frame):
+    print
+    sm.logWarn("Shutting down! (CTRL+C)")
+    sys.exit(1)
+
+class Once(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string = None):
+        if getattr(namespace, self.dest) is not None:
+            msg = '{o} can only be specified once'.format(o = option_string)
+            raise argparse.ArgumentError(None, msg)
+        setattr(namespace, self.dest, values)
+
+def parseArgs():
+    class KalibrArgParser(argparse.ArgumentParser):
+        def error(self, message):
+            self.print_help()
+            sm.logError('%s' % message)
+            sys.exit(2)
+        def format_help(self):
+            formatter = self._get_formatter()
+            formatter.add_text(self.description)
+            formatter.add_usage(self.usage, self._actions,
+                                self._mutually_exclusive_groups)
+            for action_group in self._action_groups:
+                formatter.start_section(action_group.title)
+                formatter.add_text(action_group.description)
+                formatter.add_arguments(action_group._group_actions)
+                formatter.end_section()
+            formatter.add_text(self.epilog)
+            return formatter.format_help()
+
+    usage = """
+    Example to use GridCalibrationTargetAprilgridHolo"""
+    #setup the argument list
+    parser = KalibrArgParser(description='test', usage=usage)
+
+    groupCamera = parser.add_argument_group('Camchain');
+    groupCamera.add_argument('--cam', dest='cam_chain', help='cam chain yaml', required=True, action=Once)
+
+    groupTarget = parser.add_argument_group('Calibration target')
+    groupTarget.add_argument('--target', dest='target_yaml', help='Calibration target configuration as yaml file', required=True, action=Once)
+
+    #print help if no argument is specified
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(2)
+
+    #Parser the argument list
+    try:
+        parsed = parser.parse_args()
+    except:
+        sys.exit(2)
+
+    return parsed
+
+def main():
+    parsed = parseArgs();
+    signal.signal(signal.SIGINT, signal_exit);
+
+    targetConfig = kc.CalibrationTargetParameters(parsed.target_yaml);
+
+    print "Initializing calibration target:"
+    targetConfig.printDetails()
+
+    targetParams = targetConfig.getTargetParams()
+    targetType = targetConfig.getTargetType()
+
+    gridOptions = acv_april.AprilgridOptionsHolo()
+    gridOptions.showExtractionVideo = True
+
+    grid = acv_april.GridCalibrationTargetAprilgridHolo(targetParams['tagRows'],
+                                                        targetParams['tagCols'],
+                                                        targetParams['tagDatabase_file'],
+                                                        gridOptions)
+
+    camConfig = kc.CameraChainParameters(parsed.cam_chain)
+    cam0 = camConfig.getCameraParameters(0)
+    camera0_model, camera0_intrinsic = cam0.getIntrinsics()
+    camera0_dist_model, camera0_dist_coeff = cam0.getDistortion()
+    camera0_resolution = cam0.getResolution()
+    aslam_camera0 = kc.AslamCamera(camera0_model, camera0_intrinsic, camera0_dist_model, camera0_dist_coeff, camera0_resolution)
+    detector = acv.GridDetector(aslam_camera0.geometry, grid);
+    image = cv.imread('/home/holo/Pictures/00000001.jpg')
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    cv.imshow('image', image)
+    cv.imshow('gray', gray)
+    success, obs = detector.findTargetNoTransformation(gray)
+    cv.waitKey()
+
+if __name__ == "__main__":
+    main()

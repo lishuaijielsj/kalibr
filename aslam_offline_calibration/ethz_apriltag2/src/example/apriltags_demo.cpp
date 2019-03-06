@@ -261,7 +261,7 @@ public:
   }
 
   void setup() {
-    m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
+    m_tagDetector = new AprilTags::TagDetector(m_tagCodes, 1);
 
 #ifdef EXPOSURE_CONTROL
     // manually setting camera exposure settings; OpenCV/v4l1 doesn't
@@ -294,7 +294,7 @@ public:
       v4l2_set_control(device, V4L2_CID_BRIGHTNESS, m_brightness*256);
     }
     v4l2_close(device);
-#endif 
+#endif
 
     // find and open a USB camera (built in laptop camera, web cam etc)
     m_cap = cv::VideoCapture(m_deviceId);
@@ -386,7 +386,7 @@ public:
       // print out each detection
       cout << detections.size() << " tags detected:" << endl;
       for (int i=0; i<detections.size(); i++) {
-        print_detection(detections[i]);
+        //print_detection(detections[i]);
       }
 
       // show the current image including any detections

@@ -738,6 +738,7 @@ bool OmniProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCa
   _rv = observations[0].imRows();
   _distortion.clear();
 
+  /*
   /// Initialize some temporaries needed.
   double gamma0 = 0.0;
   double minReprojErr = std::numeric_limits<double>::max();
@@ -774,7 +775,7 @@ bool OmniProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCa
       }
 
       // MIN_CORNERS is an arbitrary threshold for the number of corners
-      const size_t MIN_CORNERS = 4;
+      const size_t MIN_CORNERS = 1;
       if (count > MIN_CORNERS)
       {
         // Resize P to fit with the count of valid points.
@@ -826,6 +827,7 @@ bool OmniProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCa
             success = true;
           }
         }
+        std::cerr<< "here"<< std::endl;
       }  // If this observation has enough valid corners
       else {
         //SM_DEBUG_STREAM("Skipping row " << r << " because it only had " << count << " corners. Minimum: " << MIN_CORNERS);
@@ -838,6 +840,11 @@ bool OmniProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<GridCa
   _fv = gamma0;
   updateTemporaries();
   return success;
+  */
+  _fu = 6088;
+  _fv = 6088;
+  updateTemporaries();
+  return true;
 }  // initializeIntrinsics()
 
 template<typename DISTORTION_T>

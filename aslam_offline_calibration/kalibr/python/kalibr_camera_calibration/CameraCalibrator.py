@@ -65,10 +65,12 @@ class CameraGeometry(object):
                 sm.logError("initialization of intrinsics for cam with topic {0} failed  ".format(self.dataset.topic))
         
         #optimize for intrinsics & distortion    
+        """
         success = kcc.calibrateIntrinsics(self, observations)
         if not success:
             sm.logError("initialization of intrinsics for cam with topic {0} failed  ".format(self.dataset.topic))
-        
+        """#lsj
+        success = True
         self.isGeometryInitialized = success        
         return success
 
@@ -115,6 +117,14 @@ class TargetDetector(object):
                                                                  targetParams['tagSize'], 
                                                                  targetParams['tagSpacing'], 
                                                                  options)
+        elif targetType == 'aprilgridholo':
+            options = acv_april.AprilgridOptionsHolo()
+            options.minTagsForValidObs = int(4)
+            options.showExtractionVideo = showCorners
+            self.grid = acv_april.GridCalibrationTargetAprilgridHolo(targetParams['tagRows'],
+                                                                     targetParams['tagCols'],
+                                                                     targetParams['tagDatabase_file'],
+                                                                     options)
         else:
             RuntimeError('Unknown calibration target type!')
 

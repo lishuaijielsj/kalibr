@@ -480,6 +480,7 @@ bool OmniProjection::initializeIntrinsics(
   if (!obs.target()) {
     return false;
   }
+  std::cout<< "my modify"<< std::endl;
 
   double square(double x) {return x*x;}
   float square(float x) {return x*x;}
@@ -506,8 +507,8 @@ bool OmniProjection::initializeIntrinsics(
   for (size_t r = 0; r < target.rows(); ++r) {
     // Grab all the valid corner points for this checkerboard observation
     cv::Mat
-    P(target.cols(); 4, CV_64F
-        );
+    P(target.cols(), 4, CV_64F
+        );//lsj replace ; with ,
         size_t count = 0;
         for (size_t c = 0; c < target.cols(); ++c) {
           Eigen::Vector2d imagePoint;
@@ -523,12 +524,14 @@ bool OmniProjection::initializeIntrinsics(
           }
         }
 
-        const int MIN_CORNERS = 8;
+        const int MIN_CORNERS = 2;// lsj replace 8 with 2
+        std::cerr<< "count "<< count<<std::endl;
         // MIN_CORNERS is an arbitrary threshold for the number of corners
         if (count > MIN_CORNERS) {
           // Resize P to fit with the count of valid points.
           cv::Mat C;
-          cv::SVD::solveZ(P.colRange(0, count), C);
+          cv::SVD::solveZ(P.rowRange(0, count), C);//lsj replace colRange with rowRange
+          std::cout<<"P rows: "<< P.rowRange(0,count).rows<< std::endl;
 
           double t = square(C.at<double>(0)) + square(C.at<double>(1))
               + C.at<double>(2) * C.at<double>(3);

@@ -778,13 +778,16 @@ bool PinholeProjection<DISTORTION_T>::initializeIntrinsics(const std::vector<Gri
   }
 
   //get the median of the guesses
-  if(f_guesses.empty())
+  /*if(f_guesses.empty())
     return false;
   double f0 = PinholeHelpers::medianOfVectorElements(f_guesses);
 
   //set the estimate
   _fu = f0;
-  _fv = f0;
+  _fv = f0;*/
+  _fu = observations[0].imCols() / M_PI;
+  _fv = observations[0].imCols() / M_PI;
+  std::cerr<< "initial focal lenght is: "<< _fu<< std::endl;
   updateTemporaries();
 
   return true;
@@ -875,6 +878,22 @@ bool PinholeProjection<DISTORTION_T>::estimateTransformation(
   }
 
   out_T_t_c.set(T_camera_model.inverse());
+
+  // lsj reject image when the pose from pnp is wrong with a large reprojection error
+  size_t point_num = 0;
+  double Sum_error = 0;
+  point_num = computeReprojectionError(obs, out_T_t_c, Sum_error);
+  if(point_num < 4)
+  {
+    std::cerr << "to few valid 3D-2D point pair in PnP" << std::endl;
+    return false;
+  }
+  else if(Sum_error / double(point_num) > 3.0)
+  {
+    std::cerr << "the average reprojection error is too large " << Sum_error / double(point_num) << std::endl;
+    return false;
+  }
+
   return true;
 }
 
